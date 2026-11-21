@@ -248,8 +248,13 @@
                     {{ lote.precioCompra | currency:'USD' }}
                   </td>
 
-                  <td class="text-end">{{ lote.cantidadStock }}</td>
-
+                   @if (lote.cantidadStock<10) {
+                    <td class="text-end">
+                      <span class="badage rounded bg-danger text-white px-3 py-1">{{ lote.cantidadStock }}</span>
+                    </td>
+                   }@else {
+                    <td class="text-end">{{ lote.cantidadStock }}</td>
+                   }
                   <td class="text-center">
                     {{ lote.fechaIngreso | date:'dd/MM/yyyy' }}
                   </td>
