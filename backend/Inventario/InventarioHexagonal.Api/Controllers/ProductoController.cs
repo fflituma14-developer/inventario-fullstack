@@ -1,8 +1,9 @@
+
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using InventarioHexagonal.Application.Services;
 using InventarioHexagonal.Domain.Entities;
 using InventarioHexagonal.Api.DTOs;
-using Microsoft.AspNetCore.Authorization;
 
 namespace InventarioHexagonal.Api.Controllers;
 
@@ -12,10 +13,14 @@ namespace InventarioHexagonal.Api.Controllers;
 public class ProductoController : ControllerBase
 {
     private readonly ProductoService _productoService;
+    private readonly ILogger<ProductoController> _logger;
 
-    public ProductoController(ProductoService productoService)
+    public ProductoController(
+        ProductoService productoService,
+        ILogger<ProductoController> logger)
     {
         _productoService = productoService;
+        _logger = logger;
     }
 
     // GET: api/productos
@@ -34,7 +39,16 @@ public class ProductoController : ControllerBase
         var producto = await _productoService.GetByIdAsync(id);
 
         if (producto == null)
-            return NotFound(new { mensaje = "Producto no encontrado" });
+        {
+            _logger.LogWarning(
+                "No se encontró el producto {IdProducto}",
+                id);
+
+            return NotFound(new
+            {
+                mensaje = "Producto no encontrado"
+            });
+        }
 
         return Ok(producto);
     }
@@ -53,6 +67,10 @@ public class ProductoController : ControllerBase
 
         var nuevoProducto = await _productoService.CreateAsync(producto);
 
+        _logger.LogInformation(
+            "Producto creado correctamente. IdProducto: {IdProducto}",
+            nuevoProducto.IdProducto);
+
         return StatusCode(201, nuevoProducto);
     }
 
@@ -66,15 +84,33 @@ public class ProductoController : ControllerBase
         {
             IdProducto = id,
             Nombre = request.Nombre,
-            Descripcion = request.Descripcion
+            Descripcion = request.Descripcion,
+            Estado = request.Estado
         };
 
         var actualizado = await _productoService.UpdateAsync(producto);
 
         if (!actualizado)
-            return NotFound(new { mensaje = "Producto no encontrado" });
+        {
+            _logger.LogWarning(
+                "No se pudo actualizar. Producto {IdProducto} no encontrado",
+                id);
 
-        return Ok(new { mensaje = "Producto actualizado correctamente" });
+            return NotFound(new
+            {
+                mensaje = "Producto no encontrado"
+            });
+        }
+
+        _logger.LogInformation(
+            "Producto {IdProducto} actualizado correctamente. Estado: {Estado}",
+            id,
+            request.Estado);
+
+        return Ok(new
+        {
+            mensaje = "Producto actualizado correctamente"
+        });
     }
 
     // DELETE: api/productos/1
@@ -84,8 +120,24 @@ public class ProductoController : ControllerBase
         var eliminado = await _productoService.DeleteAsync(id);
 
         if (!eliminado)
-            return NotFound(new { mensaje = "Producto no encontrado" });
+        {
+            _logger.LogWarning(
+                "No se pudo eliminar. Producto {IdProducto} no encontrado",
+                id);
 
-        return Ok(new { mensaje = "Producto eliminado correctamente" });
+            return NotFound(new
+            {
+                mensaje = "Producto no encontrado"
+            });
+        }
+
+        _logger.LogInformation(
+            "Producto {IdProducto} eliminado lógicamente",
+            id);
+
+        return Ok(new
+        {
+            mensaje = "Producto eliminado correctamente"
+        });
     }
 }

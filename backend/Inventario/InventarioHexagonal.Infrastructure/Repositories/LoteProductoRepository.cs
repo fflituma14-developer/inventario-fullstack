@@ -19,7 +19,7 @@ public class LoteProductoRepository : ILoteProductoRepository
     {
         return await _dbContext.LotesProductos
             .Where(l => l.Estado != "E")
-            .OrderBy(l => l.NumeroLote)
+            .OrderByDescending(l => l.IdLote)
             .ToListAsync();
     }
 
@@ -28,7 +28,7 @@ public class LoteProductoRepository : ILoteProductoRepository
     {
         return await _dbContext.LotesProductos
             .FirstOrDefaultAsync(l =>
-                l.IdLote == id && l.Estado != "E");
+                l.IdLote == id && l.Estado == "A");
     }
 
     // Registrar lote

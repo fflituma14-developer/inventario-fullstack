@@ -8,33 +8,24 @@
     </p>
   </div>
 
-  @if (mensajeError) {
-    <div class="alert alert-danger" role="alert">
-      {{ mensajeError }}
-    </div>
-  }
-
-  @if (mensajeExito) {
-    <div class="alert alert-success" role="status">
-      {{ mensajeExito }}
-    </div>
-  }
-
   <!-- FORMULARIO DE INGRESO -->
-
   <div class="card shadow-sm mb-4">
+
     <div class="card-header bg-white py-3">
       <h5 class="mb-0">Nuevo ingreso</h5>
     </div>
 
     <div class="card-body">
 
-      <form #inventarioForm="ngForm" (ngSubmit)="guardarLote()">
+      <form
+        #inventarioForm="ngForm"
+        (ngSubmit)="guardarLote(inventarioForm)"
+      >
 
         <div class="row g-3">
 
           <!-- PRODUCTO -->
-          <div class="col-md-6">
+          <div class="col-12 col-md-6">
             <label for="idProducto" class="form-label">
               Producto
             </label>
@@ -60,7 +51,7 @@
           </div>
 
           <!-- PROVEEDOR -->
-          <div class="col-md-6">
+          <div class="col-12 col-md-6">
             <label for="idProveedor" class="form-label">
               Proveedor
             </label>
@@ -86,7 +77,7 @@
           </div>
 
           <!-- NÚMERO DE LOTE -->
-          <div class="col-md-4">
+          <div class="col-12 col-md-4">
             <label for="numeroLote" class="form-label">
               Número de lote
             </label>
@@ -105,41 +96,63 @@
           </div>
 
           <!-- PRECIO DE COMPRA -->
-          <div class="col-md-4">
+          <div class="col-12 col-md-4">
             <label for="precioCompra" class="form-label">
-              Precio de compra ($)
+              Precio de compra (USD)
             </label>
 
             <input
               id="precioCompra"
-              type="number"
+              type="text"
               name="precioCompra"
               class="form-control"
-              [(ngModel)]="nuevoLote.precioCompra"
+              [ngModel]="nuevoLote.precioCompra || ''"
+              (input)="validarPrecio($event, precioControl)"
+              #precioControl="ngModel"
+              inputmode="decimal"
               required
-              min="0"
-              step="0.01"
+              pattern="^(?=.*[1-9])\d+(\.\d{1,2})?$"
+              placeholder="Ej. 125.50"
+              [class.is-invalid]="precioControl.invalid && precioControl.dirty"
               [disabled]="guardando"
             />
+
+            @if (precioControl.invalid && precioControl.dirty) {
+              <div class="invalid-feedback">
+                Ingresa un precio mayor que cero,
+                con máximo dos decimales.
+              </div>
+            }
           </div>
 
           <!-- CANTIDAD -->
-          <div class="col-md-4">
+          <div class="col-12 col-md-4">
             <label for="cantidadStock" class="form-label">
               Cantidad
             </label>
 
             <input
               id="cantidadStock"
-              type="number"
+              type="text"
               name="cantidadStock"
               class="form-control"
-              [(ngModel)]="nuevoLote.cantidadStock"
+              [ngModel]="nuevoLote.cantidadStock || ''"
+              (input)="validarCantidad($event, cantidadControl)"
+              #cantidadControl="ngModel"
+              maxlength="6"
+              inputmode="numeric"
               required
-              min="0"
-              step="1"
+              pattern="[1-9][0-9]{0,5}"
+              placeholder="Ej. 100"
+              [class.is-invalid]="cantidadControl.invalid && cantidadControl.dirty"
               [disabled]="guardando"
             />
+
+            @if (cantidadControl.invalid && cantidadControl.dirty) {
+              <div class="invalid-feedback">
+                Ingresa una cantidad entre 1 y 999999.
+              </div>
+            }
           </div>
 
         </div>
@@ -148,22 +161,35 @@
           <button
             type="submit"
             class="btn btn-primary"
-            [disabled]="inventarioForm.invalid || cargando ||
-              guardando || nuevoLote.idProducto <= 0 ||
-              nuevoLote.idProveedor <= 0"
+            [disabled]="
+              inventarioForm.invalid ||
+              cargando ||
+              guardando ||
+              nuevoLote.idProducto <= 0 ||
+              nuevoLote.idProveedor <= 0 ||
+              nuevoLote.precioCompra <= 0 ||
+              nuevoLote.cantidadStock <= 0
+            "
           >
-            {{ guardando ? 'Registrando...' : 'Registrar ingreso' }}
+            @if (guardando) {
+              <span
+                class="spinner-border spinner-border-sm me-2"
+                aria-hidden="true"
+              ></span>
+              Registrando...
+            } @else {
+              Registrar ingreso
+            }
           </button>
         </div>
 
       </form>
-
     </div>
   </div>
 
   <!-- LISTADO DE LOTES -->
-
   <div class="card shadow-sm">
+
     <div class="card-header bg-white py-3">
       <h5 class="mb-0">Lotes registrados</h5>
     </div>
@@ -173,23 +199,34 @@
       @if (cargando) {
 
         <div class="text-center py-4">
-          <div class="spinner-border text-primary"></div>
-          <p class="mt-2 text-muted">Cargando inventario...</p>
+          <div
+            class="spinner-border text-primary"
+            role="status"
+          >
+            <span class="visually-hidden">
+              Cargando inventario...
+            </span>
+          </div>
+
+          <p class="mt-2 text-muted">
+            Cargando inventario...
+          </p>
         </div>
 
       } @else {
 
         <div class="table-responsive">
+
           <table class="table table-hover align-middle">
 
             <thead>
               <tr>
-                <th>Lote</th>
-                <th>Producto</th>
-                <th>Proveedor</th>
-                <th>Precio compra</th>
-                <th>Stock</th>
-                <th>Fecha ingreso</th>
+                <th class="text-start">Lote</th>
+                <th class="text-start">Producto</th>
+                <th class="text-start">Proveedor</th>
+                <th class="text-end">Precio compra</th>
+                <th class="text-end">Stock</th>
+                <th class="text-center">Fecha ingreso</th>
               </tr>
             </thead>
 
@@ -207,13 +244,13 @@
                     {{ obtenerNombreProveedor(lote.idProveedor) }}
                   </td>
 
-                  <td>
+                  <td class="text-end">
                     {{ lote.precioCompra | currency:'USD' }}
                   </td>
 
-                  <td>{{ lote.cantidadStock }}</td>
+                  <td class="text-end">{{ lote.cantidadStock }}</td>
 
-                  <td>
+                  <td class="text-center">
                     {{ lote.fechaIngreso | date:'dd/MM/yyyy' }}
                   </td>
                 </tr>
@@ -221,7 +258,10 @@
               } @empty {
 
                 <tr>
-                  <td colspan="6" class="text-center text-muted py-4">
+                  <td
+                    colspan="6"
+                    class="text-center text-muted py-4"
+                  >
                     No existen lotes registrados.
                   </td>
                 </tr>
@@ -231,7 +271,6 @@
 
           </table>
         </div>
-
       }
 
     </div>

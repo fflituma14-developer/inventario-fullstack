@@ -1,22 +1,48 @@
+:host {
+  display: block;
+}
+
 .login-container {
   min-height: 100dvh;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   padding: 20px;
-  background: linear-gradient(135deg, #eef3f9, #dce6f3);
+  background: linear-gradient(
+    180deg,
+    #eef4fb 0%,
+    #dce7f7 100%
+  );
 }
 
 .login-card {
   width: 100%;
-  max-width: 430px;
-  border-radius: 14px;
+  max-width: 480px;
+  border-radius: 16px;
+  overflow: hidden;
 }
 
-.form-control {
-  min-height: 45px;
+.login-card h2 {
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  line-height: 1.25;
 }
 
-.btn {
-  border-radius: 6px;
+/* Ajustes para celulares */
+@media (max-width: 576px) {
+  .login-container {
+    padding: 12px;
+  }
+
+  .login-card {
+    max-width: 100%;
+    border-radius: 12px;
+  }
+
+  .login-card .card-body {
+    padding: 24px 20px !important;
+  }
+
+  .login-card h2 {
+    font-size: 1.45rem;
+  }
 }

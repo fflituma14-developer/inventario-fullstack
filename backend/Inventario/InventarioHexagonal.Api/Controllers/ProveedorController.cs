@@ -1,8 +1,9 @@
+
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using InventarioHexagonal.Api.DTOs;
 using InventarioHexagonal.Application.Services;
 using InventarioHexagonal.Domain.Entities;
-using Microsoft.AspNetCore.Authorization;
 
 namespace InventarioHexagonal.Api.Controllers;
 
@@ -12,10 +13,14 @@ namespace InventarioHexagonal.Api.Controllers;
 public class ProveedorController : ControllerBase
 {
     private readonly ProveedorService _proveedorService;
+    private readonly ILogger<ProveedorController> _logger;
 
-    public ProveedorController(ProveedorService proveedorService)
+    public ProveedorController(
+        ProveedorService proveedorService,
+        ILogger<ProveedorController> logger)
     {
         _proveedorService = proveedorService;
+        _logger = logger;
     }
 
     // GET: api/proveedores
@@ -34,7 +39,16 @@ public class ProveedorController : ControllerBase
         var proveedor = await _proveedorService.GetByIdAsync(id);
 
         if (proveedor == null)
-            return NotFound(new { mensaje = "Proveedor no encontrado" });
+        {
+            _logger.LogWarning(
+                "No se encontró el proveedor {IdProveedor}",
+                id);
+
+            return NotFound(new
+            {
+                mensaje = "Proveedor no encontrado"
+            });
+        }
 
         return Ok(proveedor);
     }
@@ -55,6 +69,10 @@ public class ProveedorController : ControllerBase
         };
 
         var nuevo = await _proveedorService.CreateAsync(proveedor);
+
+        _logger.LogInformation(
+            "Proveedor {IdProveedor} registrado correctamente",
+            nuevo.IdProveedor);
 
         return CreatedAtAction(
             nameof(GetByIdAsync),
@@ -83,9 +101,25 @@ public class ProveedorController : ControllerBase
         var actualizado = await _proveedorService.UpdateAsync(proveedor);
 
         if (!actualizado)
-            return NotFound(new { mensaje = "Proveedor no encontrado" });
+        {
+            _logger.LogWarning(
+                "No se pudo actualizar. Proveedor {IdProveedor} no encontrado",
+                id);
 
-        return Ok(new { mensaje = "Proveedor actualizado correctamente" });
+            return NotFound(new
+            {
+                mensaje = "Proveedor no encontrado"
+            });
+        }
+
+        _logger.LogInformation(
+            "Proveedor {IdProveedor} actualizado correctamente",
+            id);
+
+        return Ok(new
+        {
+            mensaje = "Proveedor actualizado correctamente"
+        });
     }
 
     // DELETE: api/proveedores/1
@@ -95,8 +129,24 @@ public class ProveedorController : ControllerBase
         var eliminado = await _proveedorService.DeleteAsync(id);
 
         if (!eliminado)
-            return NotFound(new { mensaje = "Proveedor no encontrado" });
+        {
+            _logger.LogWarning(
+                "No se pudo eliminar. Proveedor {IdProveedor} no encontrado",
+                id);
 
-        return Ok(new { mensaje = "Proveedor eliminado correctamente" });
+            return NotFound(new
+            {
+                mensaje = "Proveedor no encontrado"
+            });
+        }
+
+        _logger.LogInformation(
+            "Proveedor {IdProveedor} eliminado correctamente",
+            id);
+
+        return Ok(new
+        {
+            mensaje = "Proveedor eliminado correctamente"
+        });
     }
 }

@@ -1,5 +1,6 @@
+
 import { Component, inject, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm, NgModel } from '@angular/forms';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { forkJoin } from 'rxjs';
 
@@ -11,10 +12,13 @@ import { Producto } from '@features/productos/interfaces/producto.interface';
 import { Proveedor } from '@features/proveedores/interfaces/proveedor.interface';
 import { LoteProducto } from '../../interfaces/lote-producto.interface';
 
+import { AlertaService } from '@core/services/alerta.service';
+import { validarNumero } from '@shared/helpers/numero.helper';
+
 @Component({
   selector: 'app-inventario',
   standalone: true,
-  imports: [FormsModule,CurrencyPipe, DatePipe],
+  imports: [FormsModule, CurrencyPipe, DatePipe],
   templateUrl: './inventario.html',
   styleUrl: './inventario.scss'
 })
@@ -23,6 +27,7 @@ export class Inventario implements OnInit {
   private productoService = inject(ProductoService);
   private proveedorService = inject(ProveedorService);
   private inventarioService = inject(InventarioService);
+  private alertaService = inject(AlertaService);
 
   productos: Producto[] = [];
   proveedores: Proveedor[] = [];
@@ -30,8 +35,6 @@ export class Inventario implements OnInit {
 
   cargando: boolean = false;
   guardando: boolean = false;
-  mensajeError: string = '';
-  mensajeExito: string = '';
 
   nuevoLote = {
     idProducto: 0,
@@ -47,7 +50,6 @@ export class Inventario implements OnInit {
 
   cargarDatos(): void {
     this.cargando = true;
-    this.mensajeError = '';
 
     forkJoin({
       productos: this.productoService.obtenerProductos(),
@@ -55,15 +57,20 @@ export class Inventario implements OnInit {
       lotes: this.inventarioService.obtenerLotes()
     }).subscribe({
       next: (response) => {
-        this.productos = response.productos.filter(p => p.estado === 'A');
-        this.proveedores = response.proveedores.filter(p => p.estado === 'A');
-        this.lotes = response.lotes;
+        this.productos = response.productos.filter(
+          p => p.estado === 'A'
+        );
 
+        this.proveedores = response.proveedores.filter(
+          p => p.estado === 'A'
+        );
+
+        this.lotes = response.lotes;
         this.cargando = false;
       },
-      error: () => {
-        this.mensajeError = 'No se pudieron cargar los datos del inventario.';
+      error: (error: Error) => {
         this.cargando = false;
+        this.alertaService.error(error.message);
       }
     });
   }
@@ -89,26 +96,31 @@ export class Inventario implements OnInit {
       next: (response) => {
         this.lotes = response;
       },
-      error: () => {
-        this.mensajeError = 'No se pudo cargar el listado de lotes.';
+      error: (error: Error) => {
+        this.alertaService.error(error.message);
       }
     });
   }
-  guardarLote(): void {
+
+  guardarLote(formulario: NgForm): void {
+
     if (
+      formulario.invalid ||
+      this.cargando ||
       this.guardando ||
       this.nuevoLote.idProducto <= 0 ||
       this.nuevoLote.idProveedor <= 0 ||
       !this.nuevoLote.numeroLote.trim() ||
-      this.nuevoLote.precioCompra < 0 ||
-      this.nuevoLote.cantidadStock < 0
+      !Number.isFinite(this.nuevoLote.precioCompra) ||
+      this.nuevoLote.precioCompra <= 0 ||
+      !Number.isInteger(this.nuevoLote.cantidadStock) ||
+      this.nuevoLote.cantidadStock <= 0 ||
+      this.nuevoLote.cantidadStock > 999999
     ) {
       return;
     }
 
     this.guardando = true;
-    this.mensajeError = '';
-    this.mensajeExito = '';
 
     const lote = {
       ...this.nuevoLote,
@@ -116,7 +128,8 @@ export class Inventario implements OnInit {
     };
 
     this.inventarioService.crearLote(lote).subscribe({
-      next: (nuevoLote) => {
+      next: () => {
+
         this.nuevoLote = {
           idProducto: 0,
           idProveedor: 0,
@@ -125,18 +138,36 @@ export class Inventario implements OnInit {
           cantidadStock: 0
         };
 
+        formulario.resetForm({
+          idProducto: 0,
+          idProveedor: 0,
+          numeroLote: '',
+          precioCompra: '',
+          cantidadStock: ''
+        });
+
         this.guardando = false;
 
         this.obtenerLotes();
 
-        this.mensajeExito = 'Ingreso de inventario registrado correctamente.';
+        this.alertaService.exito(
+          'Ingreso de inventario registrado correctamente.'
+        );
       },
-      error: (error) => {
+      error: (error: Error) => {
         this.guardando = false;
-        this.mensajeError = error.status === 409
-          ? 'Ya existe un lote con esos datos.'
-          : 'No se pudo registrar el ingreso de inventario.';
+        this.alertaService.error(error.message);
       }
     });
+  }
+
+  validarPrecio(event: Event, control: NgModel): void {
+    this.nuevoLote.precioCompra =
+      validarNumero(event, control, 'precio');
+  }
+
+  validarCantidad(event: Event, control: NgModel): void {
+    this.nuevoLote.cantidadStock =
+      validarNumero(event, control, 'cantidad');
   }
 }

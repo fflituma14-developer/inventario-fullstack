@@ -1,5 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
 using InventarioHexagonal.Api.DTOs;
 using InventarioHexagonal.Application.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -12,19 +10,20 @@ namespace InventarioHexagonal.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly AuthService _authService;
-    private readonly IConfiguration _configuration;
     private readonly IWebHostEnvironment _environment;
+    private readonly ILogger<AuthController> _logger;
 
     public AuthController(
         AuthService authService,
-        IConfiguration configuration,
-        IWebHostEnvironment environment)
+        IWebHostEnvironment environment,
+        ILogger<AuthController> logger)
     {
         _authService = authService;
-        _configuration = configuration;
         _environment = environment;
+        _logger = logger;
     }
 
+    // POST: api/auth/login
     [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> Login(
@@ -36,25 +35,31 @@ public class AuthController : ControllerBase
 
         if (token == null)
         {
+            _logger.LogWarning(
+                "Intento de autenticación fallido");
+
             return Unauthorized(new
             {
                 mensaje = "Credenciales inválidas."
             });
         }
 
+        _logger.LogInformation(
+            "Usuario autenticado correctamente");
+
         return Ok(new { token });
     }
 
+    // POST: api/auth/registro-inicial
     [AllowAnonymous]
     [HttpPost("registro-inicial")]
     public async Task<IActionResult> RegistroInicial(
         [FromBody] CrearUsuarioRequest request)
     {
         if (!_environment.IsDevelopment())
+        {
             return NotFound();
-
-        // Aquí verificaremos que todavía no exista
-        // ningún usuario registrado.
+        }
 
         var registrado = await _authService.RegistrarAsync(
             request.NombreUsuario,
@@ -63,10 +68,18 @@ public class AuthController : ControllerBase
             request.Password);
 
         if (!registrado)
+        {
+            _logger.LogWarning(
+                "No se pudo registrar el usuario. Posible duplicado");
+
             return Conflict(new
             {
                 mensaje = "No se pudo registrar el usuario."
             });
+        }
+
+        _logger.LogInformation(
+            "Usuario registrado correctamente");
 
         return StatusCode(201, new
         {

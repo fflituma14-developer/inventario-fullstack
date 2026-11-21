@@ -10,4 +10,8 @@ public class ActualizarProductoRequest
 
     [MaxLength(500)]
     public string? Descripcion { get; set; }
+
+    [Required]
+    [RegularExpression("^[AI]$", ErrorMessage = "El estado debe ser A o I.")]
+    public string Estado { get; set; } = string.Empty;
 }

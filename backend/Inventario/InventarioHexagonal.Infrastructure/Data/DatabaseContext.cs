@@ -63,13 +63,11 @@ public class DatabaseContext : DbContext
             entity.Property(l => l.FechaEliminacion)
                 .HasColumnType("datetime");
 
-            // Relación con Producto
             entity.HasOne<Producto>()
                 .WithMany()
                 .HasForeignKey(l => l.IdProducto)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Relación con Proveedor
             entity.HasOne<Proveedor>()
                 .WithMany()
                 .HasForeignKey(l => l.IdProveedor)

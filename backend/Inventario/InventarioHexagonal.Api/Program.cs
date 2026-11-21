@@ -1,3 +1,4 @@
+using InventarioHexagonal.Api.Middlewares;
 using Serilog;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
@@ -113,6 +114,7 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+app.UseMiddleware<ExceptionMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {

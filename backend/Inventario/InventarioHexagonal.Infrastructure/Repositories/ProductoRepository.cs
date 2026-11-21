@@ -18,6 +18,7 @@ public class ProductoRepository : IProductoRepository
     public async Task<List<Producto>> GetAllAsync()
     {
         var productos = await _dbContext.Productos
+            .AsNoTracking()
             .Where(p => p.Estado != "E")
             .OrderBy(p => p.Nombre)
             .ToListAsync();
@@ -26,11 +27,12 @@ public class ProductoRepository : IProductoRepository
     }
 
     // 2. Obtener producto por ID
-    public async Task<Producto?> GetByIdAsync(int id)
+    public async Task<Producto?> GetByIdAsync(int idProducto)
     {
         return await _dbContext.Productos
+            .AsNoTracking()
             .FirstOrDefaultAsync(p =>
-                p.IdProducto == id && p.Estado != "E");
+                p.IdProducto == idProducto && p.Estado != "E");
     }
 
     // 3. Crear producto
@@ -58,6 +60,7 @@ public class ProductoRepository : IProductoRepository
 
         productoExistente.Nombre = producto.Nombre;
         productoExistente.Descripcion = producto.Descripcion;
+        productoExistente.Estado = producto.Estado;
         productoExistente.FechaActualizacion = DateTime.Now;
 
         await _dbContext.SaveChangesAsync();
