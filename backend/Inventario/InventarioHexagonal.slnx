@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="InventarioHexagonal.Api/InventarioHexagonal.Api.csproj" />
+  <Project Path="InventarioHexagonal.Application/InventarioHexagonal.Application.csproj" />
+  <Project Path="InventarioHexagonal.Domain/InventarioHexagonal.Domain.csproj" />
+  <Project Path="InventarioHexagonal.Infrastructure/InventarioHexagonal.Infrastructure.csproj" />
+</Solution>

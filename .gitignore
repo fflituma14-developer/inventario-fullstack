@@ -1,0 +1,24 @@
+# .NET
+**/bin/
+**/obj/
+
+# Angular
+**/node_modules/
+**/.angular/
+**/dist/
+
+# Logs
+**/logs/
+*.log
+
+# Archivos de usuario de Visual Studio
+.vs/
+*.user
+*.suo
+
+# Archivos del sistema
+.DS_Store
+
+# Variables y secretos locales
+.env
+.env.*
