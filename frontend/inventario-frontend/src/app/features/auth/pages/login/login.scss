@@ -1,0 +1,22 @@
+.login-container {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #eef3f9, #dce6f3);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 430px;
+  border-radius: 14px;
+}
+
+.form-control {
+  min-height: 45px;
+}
+
+.btn {
+  border-radius: 6px;
+}

@@ -1,0 +1,210 @@
+<div class="container">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="fw-bold">Productos</h2>
+      <p class="text-muted">Catálogo de productos registrados</p>
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-primary"
+      (click)="abrirFormulario()"
+    >
+      + Nuevo producto
+    </button>
+  </div>
+
+  @if (mensajeError && !mostrarFormulario) {
+    <div class="alert alert-danger">
+      {{ mensajeError }}
+    </div>
+  }
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+
+      @if (cargando) {
+        <div class="text-center py-4">
+          <div class="spinner-border text-primary"></div>
+          <p class="mt-2">Cargando productos...</p>
+        </div>
+      } @else {
+        <div class="table-responsive">
+
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (producto of productos; track producto.idProducto) {
+                <tr>
+                  <td>{{ producto.idProducto }}</td>
+                  <td>{{ producto.nombre }}</td>
+                  <td>{{ producto.descripcion || '-' }}</td>
+
+                  <td>
+                    @if (producto.estado === 'A') {
+                      <span class="badge bg-success">Activo</span>
+                    } @else {
+                      <span class="badge bg-secondary">Inactivo</span>
+                    }
+                  </td>
+
+                  <td>
+                    <div class="btn-group">
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-outline-primary"
+                            (click)="abrirFormulario(producto)"
+                            >
+                            Editar
+                        </button>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-outline-danger"
+                            (click)="eliminarProducto(producto)"
+                            [disabled]="eliminandoId !== null"
+                            >
+                            {{ eliminandoId === producto.idProducto ? 'Eliminando...' : 'Eliminar' }}
+                        </button>
+                    </div>
+                    
+                    
+
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5" class="text-center text-muted py-4">
+                    No existen productos registrados.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+
+        </div>
+      }
+
+    </div>
+  </div>
+
+</div>
+
+<!-- FORMULARIO MODAL -->
+@if (mostrarFormulario) {
+
+  <div
+    class="modal d-block"
+    tabindex="-1"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="tituloProducto"
+  >
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title" id="tituloProducto">
+            {{ productoEditandoId === null
+                ? 'Nuevo producto'
+                : 'Editar producto' }}
+          </h5>
+
+          <button
+            type="button"
+            class="btn-close"
+            aria-label="Cerrar"
+            [disabled]="guardando"
+            (click)="cerrarFormulario()"
+          ></button>
+        </div>
+
+        <form #productoForm="ngForm" (ngSubmit)="guardarProducto()">
+
+          <div class="modal-body">
+
+            <div class="mb-3">
+              <label for="nombre" class="form-label">
+                Nombre del producto
+              </label>
+
+              <input
+                id="nombre"
+                type="text"
+                name="nombre"
+                class="form-control"
+                [(ngModel)]="nuevoProducto.nombre"
+                required
+                maxlength="150"
+                placeholder="Ej. Monitor Samsung"
+              />
+            </div>
+
+            <div class="mb-3">
+              <label for="descripcion" class="form-label">
+                Descripción
+              </label>
+
+              <textarea
+                id="descripcion"
+                name="descripcion"
+                class="form-control"
+                [(ngModel)]="nuevoProducto.descripcion"
+                maxlength="500"
+                rows="3"
+                placeholder="Descripción del producto"
+              ></textarea>
+            </div>
+
+            @if (mensajeError) {
+              <div class="alert alert-danger" role="alert">
+                {{ mensajeError }}
+              </div>
+            }
+
+          </div>
+
+          <div class="modal-footer">
+
+            <button
+              type="button"
+              class="btn btn-secondary"
+              [disabled]="guardando"
+              (click)="cerrarFormulario()"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="productoForm.invalid || guardando"
+            >
+              @if (guardando) {
+                Guardando...
+              } @else if (productoEditandoId === null) {
+                Guardar producto
+              } @else {
+                Actualizar producto
+              }
+            </button>
+
+          </div>
+
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop fade show"></div>
+}
